@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+pipeline/.venv/
+
+# next.js
+.next/
+out/
+
+# env files
+.env.local
+.env.*.local
+pipeline/.env
+
+# build
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# python
+__pycache__/
+*.pyc
+
+# misc
+.DS_Store
+*.pem
+
+# playwright
+.playwright-mcp/
+
+# claude
+.claude/

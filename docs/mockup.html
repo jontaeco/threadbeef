@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThreadBeef 🥩 — Random Internet Arguments</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --surface: #131318;
+    --surface-2: #1a1a22;
+    --border: #2a2a35;
+    --text: #e8e6f0;
+    --text-muted: #7a7890;
+    --accent: #ff4d4d;
+    --accent-glow: rgba(255, 77, 77, 0.15);
+    --blue: #4d9fff;
+    --blue-glow: rgba(77, 159, 255, 0.15);
+    --green: #34d399;
+    --yellow: #fbbf24;
+    --user-a: #ff6b6b;
+    --user-b: #6ba3ff;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10, 10, 12, 0.85);
+    backdrop-filter: blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo .beef {
+    color: var(--accent);
+  }
+
+  .logo .emoji {
+    font-size: 1.3rem;
+    animation: sizzle 2s ease-in-out infinite;
+  }
+
+  @keyframes sizzle {
+    0%, 100% { transform: rotate(-5deg) scale(1); }
+    50% { transform: rotate(5deg) scale(1.1); }
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .nav-links a.active { color: var(--accent); }
+
+  .nav-pill {
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  /* HERO / MAIN AREA */
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 100px;
+  }
+
+  /* Argument metadata bar */
+  .argument-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    animation: fadeInDown 0.5s ease;
+  }
+
+  .meta-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .platform-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .platform-badge .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff4500;
+  }
+
+  .platform-badge.reddit .dot { background: #ff4500; }
+  .platform-badge.twitter .dot { background: #1da1f2; }
+
+  .topic-tag {
+    background: rgba(251, 191, 36, 0.1);
+    color: var(--yellow);
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .argument-id {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  /* ARGUMENT THREAD */
+  .thread {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease;
+  }
+
+  .thread-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+
+  .thread-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .thread-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .messages {
+    padding: 8px 0;
+  }
+
+  .message {
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(42, 42, 53, 0.5);
+    transition: background 0.2s;
+    animation: fadeIn 0.4s ease backwards;
+  }
+
+  .message:nth-child(1) { animation-delay: 0.1s; }
+  .message:nth-child(2) { animation-delay: 0.2s; }
+  .message:nth-child(3) { animation-delay: 0.3s; }
+  .message:nth-child(4) { animation-delay: 0.4s; }
+  .message:nth-child(5) { animation-delay: 0.5s; }
+  .message:nth-child(6) { animation-delay: 0.6s; }
+
+  .message:last-child { border-bottom: none; }
+
+  .message:hover { background: rgba(255, 255, 255, 0.015); }
+
+  .msg-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  .user-a .avatar { background: rgba(255, 107, 107, 0.15); color: var(--user-a); }
+  .user-b .avatar { background: rgba(107, 163, 255, 0.15); color: var(--user-b); }
+
+  .username {
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .user-a .username { color: var(--user-a); }
+  .user-b .username { color: var(--user-b); }
+
+  .msg-time {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    margin-left: auto;
+  }
+
+  .msg-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+
+  .msg-score.positive {
+    color: var(--green);
+    background: rgba(52, 211, 153, 0.1);
+  }
+
+  .msg-score.negative {
+    color: var(--accent);
+    background: rgba(255, 77, 77, 0.1);
+  }
+
+  .msg-body {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: rgba(232, 230, 240, 0.88);
+    padding-left: 38px;
+  }
+
+  .msg-body .quote {
+    border-left: 3px solid var(--border);
+    padding: 8px 14px;
+    margin: 8px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* VOTING PANEL */
+  .vote-panel {
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+
+  .vote-btn {
+    flex: 1;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s;
+    color: var(--text-muted);
+    position: relative;
+  }
+
+  .vote-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    right: 10%;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: transparent;
+    transition: background 0.25s;
+  }
+
+  .vote-btn:first-child { border-right: 1px solid var(--border); }
+
+  .vote-btn:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .vote-btn.side-a:hover { color: var(--user-a); }
+  .vote-btn.side-a:hover::after { background: var(--user-a); }
+  .vote-btn.side-b:hover { color: var(--user-b); }
+  .vote-btn.side-b:hover::after { background: var(--user-b); }
+
+  .vote-label {
+    font-weight: 700;
+    font-size: 0.85rem;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .vote-sub {
+    font-size: 0.72rem;
+    opacity: 0.6;
+  }
+
+  /* Vote results (shown after voting) */
+  .vote-results {
+    display: none;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .vote-results.visible {
+    display: flex;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .results-bar-container {
+    display: flex;
+    height: 36px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .results-bar-a {
+    background: linear-gradient(135deg, var(--user-a), #ff8888);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+    min-width: 60px;
+  }
+
+  .results-bar-b {
+    background: linear-gradient(135deg, #88b3ff, var(--user-b));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+    min-width: 60px;
+  }
+
+  .results-count {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  /* ACTION BAR */
+  .action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 28px;
+    animation: fadeInUp 0.7s ease;
+  }
+
+  .next-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 16px 48px;
+    border-radius: 100px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .next-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .next-btn:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 8px 40px rgba(255, 77, 77, 0.35);
+  }
+
+  .next-btn:hover::before { opacity: 1; }
+
+  .next-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .secondary-btn {
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 14px 22px;
+    border-radius: 100px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .secondary-btn:hover {
+    background: var(--surface);
+    border-color: var(--text-muted);
+    color: var(--text);
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(42, 42, 53, 0.4);
+    animation: fadeIn 0.8s ease;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  /* CATEGORY FILTERS */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 32px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .filter-chip {
+    padding: 7px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-chip:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
+  }
+
+  .filter-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Keyboard shortcut hint */
+  .shortcut-hint {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    opacity: 0.4;
+  }
+
+  .shortcut-hint kbd {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Loading state */
+  .loading-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 12, 0.8);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 16px;
+  }
+
+  .loading-overlay.visible {
+    display: flex;
+  }
+
+  .loader {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .thread-wrapper {
+    position: relative;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    nav { padding: 12px 16px; }
+    .logo { font-size: 1.2rem; }
+    .nav-links { gap: 12px; }
+    .nav-links a { font-size: 0.8rem; }
+    .container { padding: 24px 12px 80px; }
+    .msg-body { padding-left: 0; margin-top: 6px; }
+    .next-btn { padding: 14px 36px; font-size: 1rem; }
+    .stats-bar { gap: 20px; }
+    .argument-meta { flex-direction: column; gap: 8px; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <span>Thread</span><span class="beef">Beef</span>
+    <span class="emoji">🥩</span>
+  </div>
+  <div class="nav-links">
+    <a class="active">Random</a>
+    <a>Hall of Fame</a>
+    <a>Categories</a>
+    <a>Submit</a>
+    <button class="nav-pill">Sign in</button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="filters">
+    <button class="filter-chip active">All</button>
+    <button class="filter-chip">🔥 Petty</button>
+    <button class="filter-chip">💻 Tech</button>
+    <button class="filter-chip">🍕 Food Takes</button>
+    <button class="filter-chip">💀 Unhinged</button>
+    <button class="filter-chip">❤️ Relationship</button>
+    <button class="filter-chip">🎮 Gaming</button>
+    <button class="filter-chip">🏈 Sports</button>
+  </div>
+
+  <div class="argument-meta">
+    <div class="meta-left">
+      <div class="platform-badge reddit">
+        <span class="dot"></span>
+        r/cooking
+      </div>
+      <div class="topic-tag">🍕 Food Takes</div>
+    </div>
+    <div class="argument-id">#00247</div>
+  </div>
+
+  <div class="thread-wrapper">
+    <div class="loading-overlay">
+      <div class="loader"></div>
+    </div>
+
+    <div class="thread">
+      <div class="thread-header">
+        <div class="thread-title">Is it acceptable to break spaghetti before putting it in the pot?</div>
+        <div class="thread-sub">Originally posted 8 months ago · 847 comments</div>
+      </div>
+
+      <div class="messages">
+        <div class="message user-a">
+          <div class="msg-header">
+            <div class="avatar">P</div>
+            <div class="username">PastaPurist99</div>
+            <div class="msg-time">8mo ago</div>
+            <div class="msg-score positive">+342</div>
+          </div>
+          <div class="msg-body">
+            Breaking spaghetti is culinary sacrilege. Any Italian grandmother would disown you on the spot. The whole point of long pasta is the twirl. You break the noodle, you break the experience.
+          </div>
+        </div>
+
+        <div class="message user-b">
+          <div class="msg-header">
+            <div class="avatar">N</div>
+            <div class="username">NoodleRealist</div>
+            <div class="msg-time">8mo ago</div>
+            <div class="msg-score negative">-89</div>
+          </div>
+          <div class="msg-body">
+            Oh please. I have a small pot and a functional kitchen. Not everyone is cooking in a villa in Tuscany. Broken spaghetti tastes exactly the same. This is pure gatekeeping.
+          </div>
+        </div>
+
+        <div class="message user-a">
+          <div class="msg-header">
+            <div class="avatar">P</div>
+            <div class="username">PastaPurist99</div>
+            <div class="msg-time">8mo ago</div>
+            <div class="msg-score positive">+201</div>
+          </div>
+          <div class="msg-body">
+            <div class="quote">"I have a small pot"</div>
+            Then buy a bigger pot?? You're literally choosing to ruin pasta instead of spending $15 at Target. And it doesn't "taste the same" — the sauce-to-noodle ratio per fork is completely different. This is a texture and experience issue, not just taste.
+          </div>
+        </div>
+
+        <div class="message user-b">
+          <div class="msg-header">
+            <div class="avatar">N</div>
+            <div class="username">NoodleRealist</div>
+            <div class="msg-time">8mo ago</div>
+            <div class="msg-score positive">+44</div>
+          </div>
+          <div class="msg-body">
+            "Sauce-to-noodle ratio per fork" is the most unhinged thing I've ever read on this site. I'm feeding my family dinner, not submitting a doctoral thesis on carbohydrate aerodynamics. Touch grass.
+          </div>
+        </div>
+
+        <div class="message user-a">
+          <div class="msg-header">
+            <div class="avatar">P</div>
+            <div class="username">PastaPurist99</div>
+            <div class="msg-time">8mo ago</div>
+            <div class="msg-score positive">+578</div>
+          </div>
+          <div class="msg-body">
+            You came to a COOKING SUBREDDIT to tell people that cooking technique doesn't matter. Think about that for a second. That's like going to a car enthusiast forum and saying "who cares, it has 4 wheels and gets you there." You are the problem.
+          </div>
+        </div>
+
+        <div class="message user-b">
+          <div class="msg-header">
+            <div class="avatar">N</div>
+            <div class="username">NoodleRealist</div>
+            <div class="msg-time">8mo ago</div>
+            <div class="msg-score negative">-156</div>
+          </div>
+          <div class="msg-body">
+            I'll snap my spaghetti in half right in front of you and there's nothing you can do about it. Die mad about it. 🍝
+          </div>
+        </div>
+      </div>
+
+      <div class="vote-panel" id="votePanel">
+        <button class="vote-btn side-a" onclick="castVote('a')">
+          <div class="vote-label">🏆 PastaPurist99</div>
+          <div class="vote-sub">won this argument</div>
+        </button>
+        <button class="vote-btn side-b" onclick="castVote('b')">
+          <div class="vote-label">🏆 NoodleRealist</div>
+          <div class="vote-sub">won this argument</div>
+        </button>
+      </div>
+
+      <div class="vote-results" id="voteResults">
+        <div class="results-bar-container">
+          <div class="results-bar-a" id="barA" style="width: 73%;">73%</div>
+          <div class="results-bar-b" id="barB" style="width: 27%;">27%</div>
+        </div>
+        <div class="results-count">2,847 votes · PastaPurist99 declared winner</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="secondary-btn" onclick="shareArgument()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      Share
+    </button>
+    <button class="next-btn" onclick="nextArgument()">Next Beef →</button>
+    <button class="secondary-btn" onclick="reportArgument()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+      Report
+    </button>
+  </div>
+
+  <div class="shortcut-hint">
+    Press <kbd>Space</kbd> for next · <kbd>1</kbd> vote left · <kbd>2</kbd> vote right
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-num">12,847</div>
+      <div class="stat-label">Arguments</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">892K</div>
+      <div class="stat-label">Votes Cast</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">6</div>
+      <div class="stat-label">Platforms</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Filter chip toggle
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+
+  // Voting
+  function castVote(side) {
+    document.getElementById('votePanel').style.display = 'none';
+    document.getElementById('voteResults').classList.add('visible');
+
+    // Animate bars
+    const barA = document.getElementById('barA');
+    const barB = document.getElementById('barB');
+    barA.style.width = '0%';
+    barB.style.width = '0%';
+
+    setTimeout(() => {
+      barA.style.width = '73%';
+      barB.style.width = '27%';
+    }, 50);
+  }
+
+  // Next argument (simulated reload animation)
+  function nextArgument() {
+    const wrapper = document.querySelector('.thread-wrapper');
+    const overlay = document.querySelector('.loading-overlay');
+    overlay.classList.add('visible');
+
+    setTimeout(() => {
+      overlay.classList.remove('visible');
+      // In a real app, this would fetch and render a new argument
+      // For the mockup, we just flash the loader
+      wrapper.style.animation = 'none';
+      wrapper.offsetHeight; // force reflow
+      wrapper.style.animation = '';
+    }, 800);
+  }
+
+  function shareArgument() {
+    // Would generate shareable link/card
+    alert('Link copied! 🥩');
+  }
+
+  function reportArgument() {
+    alert('Thanks for flagging this beef.');
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      nextArgument();
+    }
+    if (e.key === '1') castVote('a');
+    if (e.key === '2') castVote('b');
+  });
+</script>
+
+</body>
+</html>
