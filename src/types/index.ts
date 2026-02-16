@@ -9,21 +9,8 @@ export type Platform =
   | "forum"
   | "user_submitted";
 
-export type Category =
-  | "petty"
-  | "tech"
-  | "food_takes"
-  | "unhinged"
-  | "relationship"
-  | "gaming"
-  | "sports"
-  | "politics"
-  | "aita"
-  | "pedantic"
-  | "movies_tv"
-  | "music"
-  | "philosophy"
-  | "money";
+// Categories are free-form — LLM assigns whatever fits best
+export type Category = string;
 
 export type ReactionType =
   | "dead"

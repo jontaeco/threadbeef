@@ -156,14 +156,13 @@ def score_entertainment(thread: RawThread) -> int:
         elif second_half_avg > first_half_avg:
             score += 8
 
-    # 3. Sweet spot length (up to 20 points)
+    # 3. Length bonus (up to 15 points)
+    # Longer arguments = more investment from both sides = likely more entertaining
     msg_count = len(messages)
-    if 6 <= msg_count <= 10:
-        score += 20
-    elif 4 <= msg_count <= 12:
-        score += 12
-    elif msg_count > 12:
-        score += 5
+    if msg_count >= 6:
+        score += 15
+    elif msg_count >= 4:
+        score += 10
 
     # 4. Caps usage / emphasis (up to 15 points)
     caps_count = sum(

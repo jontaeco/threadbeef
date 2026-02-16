@@ -31,8 +31,6 @@ class RedditConfig:
         default_factory=lambda: ["hot", "top", "controversial"]
     )
     min_messages_per_side: int = 3
-    max_messages_per_side: int = 8
-    max_total_messages: int = 16
     min_score: int = 5
 
 
@@ -46,8 +44,6 @@ class HNConfig:
     )
     stories_per_type: int = 30
     min_messages_per_side: int = 3
-    max_messages_per_side: int = 8
-    max_total_messages: int = 16
 
 
 @dataclass
@@ -58,9 +54,8 @@ class YouTubeConfig:
         default_factory=lambda: os.getenv("YOUTUBE_API_KEY", "")
     )
     max_results_per_video: int = 100
+    max_comments: int = 1000
     min_messages_per_side: int = 3
-    max_messages_per_side: int = 8
-    max_total_messages: int = 16
 
 
 @dataclass
@@ -68,11 +63,12 @@ class LLMConfig:
     """LLM provider and processing settings."""
 
     provider: str = field(
-        default_factory=lambda: os.getenv("LLM_PROVIDER", "claude")
+        default_factory=lambda: os.getenv("LLM_PROVIDER", "kimi")
     )
-    claude_model: str = "claude-sonnet-4-5-20250929"
+    claude_model: str = "claude-haiku-4-5-20251001"
     openai_model: str = "gpt-4o"
-    entertainment_threshold: float = 5.0
+    kimi_model: str = "kimi-k2.5"
+    entertainment_threshold: float = 5.5
     batch_size: int = 10
 
     # Scoring thresholds for pre-LLM filtering
@@ -80,33 +76,16 @@ class LLMConfig:
     entertainment_pre_threshold: int = 30
 
 
+# Static evergreen queries — broad enough to surface fresh content each run
 YOUTUBE_SEARCH_QUERIES = [
     "debate goes wrong",
     "change my mind argument",
     "heated argument comments",
     "controversial opinion reaction",
-    "is a hot dog a sandwich debate",
-    "tabs vs spaces debate",
-    "iphone vs android debate",
-    "worst food takes",
     "unpopular gaming opinions",
     "relationship advice gone wrong",
-]
-
-# Categories matching the app's category enum
-CATEGORIES = [
-    "petty",
-    "tech",
-    "food_takes",
-    "unhinged",
-    "relationship",
-    "gaming",
-    "sports",
-    "politics",
-    "aita",
-    "pedantic",
-    "movies_tv",
-    "music",
-    "philosophy",
-    "money",
+    "comment section fight",
+    "worst take ever",
+    "most controversial opinion",
+    "people arguing in comments",
 ]

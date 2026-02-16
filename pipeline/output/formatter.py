@@ -29,5 +29,6 @@ def format_for_db(argument: ProcessedArgument) -> dict:
             for m in argument.messages
         ],
         "entertainment_score": argument.entertainment_score,
+        "nsfw_level": argument.nsfw_level,
         "status": argument.status,
     }

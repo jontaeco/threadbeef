@@ -31,14 +31,16 @@ def insert_argument(data: dict) -> Optional[int]:
                     category, heat_rating,
                     user_a_display_name, user_b_display_name,
                     user_a_zinger, user_b_zinger,
-                    messages, entertainment_score, status
+                    messages, entertainment_score, status,
+                    nsfw_level
                 ) VALUES (
                     %(platform)s, %(platform_source)s, %(original_url)s,
                     %(title)s, %(context_blurb)s, %(topic_drift)s,
                     %(category)s, %(heat_rating)s,
                     %(user_a_display_name)s, %(user_b_display_name)s,
                     %(user_a_zinger)s, %(user_b_zinger)s,
-                    %(messages)s, %(entertainment_score)s, %(status)s
+                    %(messages)s, %(entertainment_score)s, %(status)s,
+                    %(nsfw_level)s
                 )
                 RETURNING beef_number
                 """,
@@ -46,6 +48,7 @@ def insert_argument(data: dict) -> Optional[int]:
                     **data,
                     "messages": json.dumps(data["messages"]),
                     "status": data.get("status", "pending_review"),
+                    "nsfw_level": data.get("nsfw_level"),
                 },
             )
             result = cur.fetchone()

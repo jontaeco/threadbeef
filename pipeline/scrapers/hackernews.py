@@ -102,8 +102,6 @@ async def _scrape_stories(
                 chains = find_argument_chains(
                     comment_tree,
                     min_per_side=config.min_messages_per_side,
-                    max_per_side=config.max_messages_per_side,
-                    max_total=config.max_total_messages,
                 )
 
                 for chain in chains:

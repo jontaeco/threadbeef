@@ -1,6 +1,9 @@
 import type { Category, ReactionType } from "@/types";
 
 // ── Categories ─────────────────────────────────────────────────────
+// Categories are free-form (LLM-assigned). This map provides display
+// metadata for known categories. Unknown categories get auto-generated
+// labels and a default emoji.
 
 export interface CategoryDefinition {
   slug: Category;
@@ -9,7 +12,8 @@ export interface CategoryDefinition {
   tagline: string;
 }
 
-export const CATEGORIES: CategoryDefinition[] = [
+/** Display metadata for known categories */
+const KNOWN_CATEGORIES: CategoryDefinition[] = [
   {
     slug: "petty",
     emoji: "🔥",
@@ -95,9 +99,60 @@ export const CATEGORIES: CategoryDefinition[] = [
     label: "Money",
     tagline: "Tipping debates, rent splits, and financial hot takes.",
   },
+  {
+    slug: "religion",
+    emoji: "🙏",
+    label: "Religion",
+    tagline: "Holy wars, but make them comment sections.",
+  },
+  {
+    slug: "science",
+    emoji: "🔬",
+    label: "Science",
+    tagline: "Peer review, but angrier.",
+  },
+  {
+    slug: "cars",
+    emoji: "🚗",
+    label: "Cars",
+    tagline: "Horsepower arguments and road rage in text form.",
+  },
+  {
+    slug: "fitness",
+    emoji: "💪",
+    label: "Fitness",
+    tagline: "Broscience vs actual science.",
+  },
+  {
+    slug: "anime",
+    emoji: "⚔️",
+    label: "Anime",
+    tagline: "Power scaling debates and waifu wars.",
+  },
 ];
 
-export const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.slug, c]));
+const KNOWN_CATEGORY_MAP = new Map(KNOWN_CATEGORIES.map((c) => [c.slug, c]));
+
+/** Get display info for any category — known or unknown */
+export function getCategoryDisplay(slug: string): CategoryDefinition {
+  const known = KNOWN_CATEGORY_MAP.get(slug);
+  if (known) return known;
+
+  // Auto-generate display for unknown categories
+  const label = slug
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return {
+    slug,
+    emoji: "💬",
+    label,
+    tagline: `Internet arguments about ${label.toLowerCase()}.`,
+  };
+}
+
+/** @deprecated Use getCategoryDisplay() for individual lookups */
+export const CATEGORIES = KNOWN_CATEGORIES;
+export const CATEGORY_MAP = KNOWN_CATEGORY_MAP;
 
 // ── Verdict Thresholds ─────────────────────────────────────────────
 

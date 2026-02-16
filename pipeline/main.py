@@ -35,6 +35,29 @@ from pipeline.db import get_stats
 console = Console()
 
 
+def generate_trending_queries(llm_config) -> list[str]:
+    """Use the LLM to generate trending YouTube search queries for finding arguments."""
+    import json
+    try:
+        client = get_llm_client()
+        response = client.complete(
+            system="You generate YouTube search queries designed to find videos with heated, entertaining comment section arguments. Return ONLY a JSON array of 5-8 search query strings. Focus on current events, trending debates, viral controversies, and polarizing topics people are arguing about right now. Make queries specific enough to find argumentative content but broad enough to return results.",
+            user="Generate YouTube search queries for finding videos with entertaining comment section arguments. Focus on whatever people are likely arguing about right now — trending topics, recent controversies, viral debates. Return ONLY a JSON array of strings.",
+        )
+        response = response.strip()
+        if response.startswith("```"):
+            response = response.split("\n", 1)[1]
+            if response.endswith("```"):
+                response = response[:-3]
+            response = response.strip()
+        queries = json.loads(response)
+        if isinstance(queries, list) and all(isinstance(q, str) for q in queries):
+            return queries
+    except Exception as e:
+        console.print(f"  [yellow]Trending query generation failed: {e}[/yellow]")
+    return []
+
+
 def cmd_scrape(args):
     """Scrape platforms for argument threads."""
     reddit_config = RedditConfig()
@@ -64,15 +87,25 @@ def cmd_scrape(args):
             from pipeline.scrapers.youtube import _search_debate_videos
             import httpx
 
+            # Generate trending queries via LLM
+            all_queries = list(YOUTUBE_SEARCH_QUERIES)
+            if not args.no_trending:
+                trending = generate_trending_queries(llm_config)
+                if trending:
+                    console.print(f"  [magenta]Generated {len(trending)} trending queries:[/magenta]")
+                    for q in trending:
+                        console.print(f"    [dim]• {q}[/dim]")
+                    all_queries.extend(trending)
+
             async def discover():
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     return await _search_debate_videos(
-                        client, youtube_config.api_key, YOUTUBE_SEARCH_QUERIES
+                        client, youtube_config.api_key, all_queries
                     )
 
             import asyncio
             discovered = asyncio.run(discover())
-            console.print(f"  [cyan]Auto-discovered {len(discovered)} videos[/cyan]")
+            console.print(f"  [cyan]Auto-discovered {len(discovered)} videos from {len(all_queries)} queries[/cyan]")
             video_ids.extend(discovered)
 
         youtube_threads = scrape_youtube(
@@ -224,6 +257,11 @@ def main():
         "--dry-run",
         action="store_true",
         help="Scrape and filter only, skip LLM and DB",
+    )
+    scrape_parser.add_argument(
+        "--no-trending",
+        action="store_true",
+        help="Skip LLM-generated trending queries, use only static queries",
     )
     scrape_parser.set_defaults(func=cmd_scrape)
 

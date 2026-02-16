@@ -26,22 +26,8 @@ export const platformEnum = pgEnum("platform", [
   "user_submitted",
 ]);
 
-export const categoryEnum = pgEnum("category", [
-  "petty",
-  "tech",
-  "food_takes",
-  "unhinged",
-  "relationship",
-  "gaming",
-  "sports",
-  "politics",
-  "aita",
-  "pedantic",
-  "movies_tv",
-  "music",
-  "philosophy",
-  "money",
-]);
+// Category is now free-form text — LLM assigns whatever fits best
+// nsfw_level is also free-form text: "mild" | "spicy" | "nuclear" | null
 
 export const argumentStatusEnum = pgEnum("argument_status", [
   "pending_review",
@@ -98,7 +84,8 @@ export const arguments_ = pgTable(
     title: text("title").notNull(), // context/topic line
     contextBlurb: text("context_blurb"), // LLM-generated 1-sentence summary
     topicDrift: text("topic_drift"), // "Started about X → Ended about Y"
-    category: categoryEnum("category").notNull(),
+    category: text("category").notNull(),
+    nsfwLevel: text("nsfw_level"),  // "mild" | "spicy" | "nuclear" | null
     heatRating: integer("heat_rating").notNull().default(1), // 1-5
     userADisplayName: text("user_a_display_name").notNull(),
     userBDisplayName: text("user_b_display_name").notNull(),

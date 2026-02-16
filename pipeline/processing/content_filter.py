@@ -1,47 +1,35 @@
 """
 Content filtering: pre-filter (before LLM) and post-filter (after LLM).
+
+No content censorship — slurs and edgy content are tagged with NSFW intensity
+levels (mild/spicy/nuclear) instead of rejected. Only structural quality checks.
 """
 
 import re
 from pipeline.models import RawThread, ProcessedArgument
 
-# Slur list — common offensive terms to auto-reject
-SLUR_PATTERNS = [
-    r"\bn[i!1]gg[ae3]r?\b",
-    r"\bf[a@]gg?[o0]t\b",
-    r"\br[e3]t[a@]rd\b",
-    r"\bk[i1]ke\b",
-    r"\bch[i1]nk\b",
-    r"\bsp[i1]c\b",
-    r"\btr[a@]nn[yi]\b",
-]
-
 
 def pre_filter(thread: RawThread) -> tuple[bool, str]:
     """
     Pre-filter before LLM processing.
+    Only structural quality checks — no content censorship.
     Returns (passed, reason).
     """
     messages = thread.messages
 
-    # Check message count bounds (4-20)
+    # Minimum message count (need at least 6 for a real back-and-forth)
     if len(messages) < 4:
         return False, f"Too few messages ({len(messages)})"
-    if len(messages) > 20:
-        return False, f"Too many messages ({len(messages)})"
+
+    # No upper message cap — arguments run as long as they naturally go
 
     # Min average length 20 chars
     avg_length = sum(len(m.body) for m in messages) / max(1, len(messages))
     if avg_length < 20:
         return False, f"Messages too short (avg {avg_length:.0f} chars)"
 
-    # Check for slurs
-    all_text = " ".join(m.body for m in messages)
-    for pattern in SLUR_PATTERNS:
-        if re.search(pattern, all_text, re.IGNORECASE):
-            return False, "Contains slur"
-
     # Basic English check — look for common English words
+    all_text = " ".join(m.body for m in messages)
     english_markers = ["the", "is", "are", "was", "have", "that", "this", "with"]
     lower_text = all_text.lower()
     english_hits = sum(1 for w in english_markers if f" {w} " in lower_text)
@@ -63,13 +51,13 @@ def pre_filter(thread: RawThread) -> tuple[bool, str]:
 
 def post_filter(
     argument: ProcessedArgument,
-    entertainment_threshold: float = 7.0,
+    entertainment_threshold: float = 5.5,
 ) -> tuple[bool, str]:
     """
     Post-filter after LLM enrichment.
     Returns (passed, reason).
     """
-    # Entertainment threshold
+    # Entertainment threshold (unified at 5.5 across the pipeline)
     if (
         argument.entertainment_score is not None
         and argument.entertainment_score < entertainment_threshold

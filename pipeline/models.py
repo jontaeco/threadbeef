@@ -54,4 +54,5 @@ class ProcessedArgument(BaseModel):
     user_b_zinger: Optional[str] = None
     messages: list[ProcessedMessage]
     entertainment_score: Optional[float] = Field(default=None, ge=1.0, le=10.0)
+    nsfw_level: Optional[str] = None  # "mild" | "spicy" | "nuclear"
     status: str = "pending_review"

@@ -11,13 +11,12 @@ from collections import defaultdict
 def find_argument_chains(
     comments: list[dict],
     min_per_side: int = 3,
-    max_per_side: int = 8,
-    max_total: int = 16,
 ) -> list[dict]:
     """
     Find argument chains in a flat comment tree.
 
     Each comment dict must have: id, parent_id, author, body, score, timestamp, depth.
+    No message caps — arguments run as long as they naturally go.
 
     Returns list of chains, each with:
       - participant_a, participant_b
@@ -62,9 +61,6 @@ def find_argument_chains(
         for m in chain:
             visited.add(m["id"])
 
-        # Trim if too long
-        chain = _trim_chain(chain, max_total)
-
         chains.append(
             {
                 "participant_a": author_list[0],
@@ -81,7 +77,7 @@ def _build_chain(
     comment_map: dict[str, dict],
     children_of: dict[str, list[dict]],
     visited: set[str],
-    max_depth: int = 30,
+    max_depth: int = 100,
 ) -> list[dict] | None:
     """
     Build a reply chain from a starting comment.
@@ -133,28 +129,3 @@ def _build_chain(
     return chain
 
 
-def _trim_chain(chain: list[dict], max_total: int) -> list[dict]:
-    """
-    Trim a chain to max_total messages.
-    Keep first 4, last 4, and 2 highest-scored middle messages.
-    """
-    if len(chain) <= max_total:
-        return chain
-
-    if max_total <= 10:
-        head = chain[:4]
-        tail = chain[-4:]
-        middle = chain[4:-4]
-
-        # Pick 2 highest-scored middle messages
-        remaining = max_total - len(head) - len(tail)
-        if remaining > 0 and middle:
-            scored = sorted(middle, key=lambda m: m.get("score") or 0, reverse=True)
-            picks = scored[:remaining]
-            # Maintain original order
-            pick_ids = {m["id"] for m in picks}
-            ordered_picks = [m for m in middle if m["id"] in pick_ids]
-            return head + ordered_picks + tail
-        return head + tail
-
-    return chain[:max_total]

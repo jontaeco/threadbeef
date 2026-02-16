@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { arguments_ } from "@/lib/db/schema";
-import { CATEGORIES } from "@/lib/constants";
+import { getCategoryDisplay } from "@/lib/constants";
 
 export async function GET() {
-  // Count approved arguments per category
+  // Count approved arguments per category — dynamic, not limited to a fixed list
   const counts = await db
     .select({
       category: arguments_.category,
@@ -15,15 +15,19 @@ export async function GET() {
     .where(eq(arguments_.status, "approved"))
     .groupBy(arguments_.category);
 
-  const countMap = new Map(counts.map((c) => [c.category, c.count]));
-
-  const categories = CATEGORIES.map((cat) => ({
-    slug: cat.slug,
-    label: cat.label,
-    emoji: cat.emoji,
-    tagline: cat.tagline,
-    count: countMap.get(cat.slug) ?? 0,
-  }));
+  const categories = counts
+    .filter((c) => c.count > 0)
+    .map((c) => {
+      const display = getCategoryDisplay(c.category);
+      return {
+        slug: c.category,
+        label: display.label,
+        emoji: display.emoji,
+        tagline: display.tagline,
+        count: c.count,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
 
   return NextResponse.json({ categories });
 }

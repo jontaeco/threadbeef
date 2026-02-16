@@ -60,6 +60,30 @@ class OpenAIClient(LLMClient):
         return response.choices[0].message.content or ""
 
 
+class KimiClient(LLMClient):
+    """Moonshot Kimi client (OpenAI-compatible API)."""
+
+    def __init__(self, model: str = "kimi-k2.5"):
+        from openai import OpenAI
+
+        self.client = OpenAI(
+            api_key=os.environ["MOONSHOT_API_KEY"],
+            base_url="https://api.moonshot.ai/v1",
+        )
+        self.model = model
+
+    def complete(self, system: str, user: str) -> str:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            max_tokens=8192,
+        )
+        return response.choices[0].message.content or ""
+
+
 def get_llm_client() -> LLMClient:
     """Factory: create LLM client based on LLM_PROVIDER env var."""
     provider = os.getenv("LLM_PROVIDER", "claude").lower()
@@ -67,6 +91,9 @@ def get_llm_client() -> LLMClient:
     if provider == "openai":
         model = os.getenv("OPENAI_MODEL", "gpt-4o")
         return OpenAIClient(model=model)
+    elif provider == "kimi":
+        model = os.getenv("KIMI_MODEL", "kimi-k2.5")
+        return KimiClient(model=model)
     else:
         model = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
         return ClaudeClient(model=model)
